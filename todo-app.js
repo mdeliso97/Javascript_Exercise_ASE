@@ -10,6 +10,9 @@
  *
  * 3. Your API should comply with our specs (source code). As an example, a compliant API with swagger can be
  * tested from http://todospecs.thing.zone/?http://todo.thing.zone.
+ *
+ * Notes: ctx is probably the function which takes as parameter what is given from user as input
+ *
  * @type {*|module:koa-router|Router|undefined}
  */
 
@@ -36,15 +39,16 @@ let todos = {
 };
 let nextId = 3;
 
-// Define routes
+// Define routers
 
 router.get('/todos/', listTodos)
     .get('/todos/:id/tags', listTags)
+    .get('/todos/tags/', listTodosGivenTags)
     .del('/todos/', clearAllTodos)
     .del('/todos/tags', clearAllTags)
     .post('/todos/', addTodo)
-    .post('/todos/:id/tags', addTags)
     .get('todo', '/todos/:id', showTodo)
+    // .get('todo', '/todos/tags/:id', showTodoGivenTags)
     .get('tags', '/todos/:id/tags', showTags)
     .patch('/todos/:id', updateTodo)
     .patch('/todos/:id/tags', updateTags)
@@ -61,8 +65,25 @@ async function listTodos(ctx) {
 async function listTags(ctx) {
   ctx.body = Object.keys(todos).map(k => {
     todos[k].tags = k;
-    return todos[k];
+    return todos[k].tags;
   });
+}
+
+// async function listTodosGivenTags(ctx) {
+//     ctx.body = Object.keys(todos).map(k => {
+//             todos.tags = k;
+//             return todos[k];
+//         }).filter(todo => todo.tags.includes(k)); // Assuming each todo has a 'tags' property
+// }
+
+async function listTodosGivenTags(ctx) {
+  const tag = ctx.params.tags;
+  const todo = todos.tags;
+
+  if (!todos.tag) ctx.throw(404, {'error': 'Todo not found for matching tag'});
+
+  todo.id = tag;
+  ctx.body = todo;
 }
 
 // Delete all todos listed
@@ -90,20 +111,6 @@ async function addTodo(ctx) {
   ctx.status = 303;
   ctx.set('Location', todo['url']);
 }
-
-
-// async function addTags(ctx) {
-//     const todo = ctx.request.body;
-//     if (!todo.title) ctx.throw(400, {'error': '"title" is a required field'});
-//     const tags = todo.tags;
-//     if (tags !== 'string' || !tags.length) ctx.throw(400, {'error': '"Tags" must be a list of strings with at least one character'});
-//
-//     todo['url'] = 'http://' + ctx.host + router.url('todo', nextId);
-//     todos[nextId++] = todo;
-//
-//     ctx.status = 303;
-//     ctx.set('Location', todo['url']);
-// }
 
 async function showTodo(ctx) {
   const id = ctx.params.id;
