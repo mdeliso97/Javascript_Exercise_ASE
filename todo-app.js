@@ -18,12 +18,12 @@
 
 const router = require('koa-router')();
 const Koa = require('koa');
+const todo_model = require('./todoModel')
 const bodyParser = require('koa-bodyparser');
 const cors = require('@koa/cors');
 const mongoose = require('mongoose'); // Add Mongoose for MongoDB integration
-//require('dotenv').config({ path: './config.env' })
+require('dotenv').config({ path: './config.env' })
 
-const mongoDBURL = process.env.MONGODB_URI || 'mongodb://localhost/todoapp';
 mongoose.connect(mongoDBURL, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const app = new Koa();
@@ -32,18 +32,17 @@ mongoose.connection.once('open', () => {
   console.log('Connected to MongoDB...');
 });
 
-let todos = {
-  0: {'title': 'build an API', 'order': 1, 'completed': false},
-  1: {'title': '?????', 'order': 2, 'completed': false},
-  2: {'title': 'profit!', 'order': 3, 'completed': false}
-};
-let nextId = 3;
+// delete after not needed anymore
+todo_model.create([{'title': 'build an API', 'order': 1, 'completed': false},
+  {'title': '?????', 'order': 2, 'completed': false},
+  {'title': 'profit!', 'order': 3, 'completed': false}
+]);
 
 // Define routers
-
+// tags: get, post, del, tags/:id
 router.get('/todos/', listTodos)
     .get('/todos/:id/tags', listTags)
-    .get('/todos/tags/', listTodosGivenTags)
+    .get('/tags/:id', listTodosGivenTags)
     .del('/todos/', clearAllTodos)
     .del('/todos/tags', clearAllTags)
     .post('/todos/', addTodo)
